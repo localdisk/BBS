@@ -1,0 +1,29 @@
+{
+    "name": "localdisk/bbs",
+    "description": "BBS",
+    "keywords": ["bbs", "shitaraba", "2ch clone"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "localdisk",
+            "email": "smoochynet@gmail.com"
+        }
+    ],
+    "require": {
+        "illuminate/support": "5.0.*",
+        "guzzlehttp/guzzle": "~5.0",
+        "symfony/dom-crawler": "~2.0",
+        "symfony/css-selector": "~2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0",
+        "mockery/mockery": "~0.9",
+        "laravel/framework": "5.0.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Localdisk\\BBS\\": "src/"
+        }
+    }
+}
