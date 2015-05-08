@@ -26,6 +26,8 @@
 
 namespace Localdisk\BBS\Providers;
 
+use Symfony\Component\DomCrawler\Crawler;
+
 /**
  * Description of ShitarabaProvider
  *
@@ -68,16 +70,15 @@ class ShitarabaProvider extends AbstractProvider
      */
     public function comments($start = null, $end = null)
     {
-        $url      = "{$this->baseUrl}//bbs/rawmode.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}";
-        $response = $this->client()->get($url, ['allow_redirects' => false]);
-        if ($response->getStatusCode() > 400) {
-            // TODO Exception 作成
-            throw new \Exception($response->getBody()->getContents(), $response->getStatusCode());
-        }
-        $body = $this->encode($response->getBody()->getContents(), 'UTF-8', 'EUC-JP');
+        $url      = "{$this->baseUrl}/bbs/rawmode.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}/";
+        $response = $this->request('GET', $url);
+        $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'EUC-JP');
         // 過去ログなら
         if ($response->getHeader('ERROR') === 'STORAGE IN') {
-            return $this->parseHtml($body);
+            $storageUrl = "{$this->baseUrl}/bbs/read_archive.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}/";
+            $storageRes = $this->request('GET', $storageUrl);
+            $html       = $this->encode($storageRes->getBody()->getContents(), 'UTF-8', 'EUC-JP');
+            return $this->parseHtml($html);
         }
         return $this->parseDat($body);
     }
@@ -87,7 +88,12 @@ class ShitarabaProvider extends AbstractProvider
      */
     public function parseDat($body)
     {
-
+        $lines = array_filter(explode("\n", $body), 'strlen');
+        return array_map(function($line)
+        {
+            list($no, $name, $mail, $date, $text,, $id) = explode('<>', $line);
+            return compact('no', 'name', 'mail', 'date', 'text', 'id');
+        }, $lines);
     }
 
     /**
@@ -95,7 +101,16 @@ class ShitarabaProvider extends AbstractProvider
      */
     public function parseHtml($body)
     {
+        var_dump($body);
+        exit();
+        $crawler = (new Crawler())->addHtmlContent($body, 'UTF-8');
+        $result  = $crawler->filter('dt')->each(function(Crawler $node)
+        {
+            list($no, $name, $other) = explode('：', $node->text());
 
+            return compact('no', 'name', 'other');
+        });
+        return $result;
     }
 
     /**

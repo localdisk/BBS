@@ -24,11 +24,11 @@
  * THE SOFTWARE.
  */
 
-$raw = 'http://jbbs.shitaraba.net/bbs/rawmode.cgi/otaku/12973/1396956877'; // STORAGE IN
-$bbs = new \Localdisk\BBS\Providers\ShitarabaProvider($raw);
+$url = 'http://jbbs.shitaraba.net/bbs/rawmode.cgi/otaku/12973/1396956877'; // STORAGE IN
+//$url = 'http://jbbs.shitaraba.net/bbs/read.cgi/otaku/12368/1398258877/';
+$bbs = new \Localdisk\BBS\Providers\ShitarabaProvider($url);
 //$bbs = new \Localdisk\BBS\Providers\ShitarabaProvider('http://jbbs.shitaraba.net/bbs/read.cgi/otaku/12973/1429975229/-100');
 //$result = $bbs->threads();
 //var_dump($result);
-$bbs->comments();
-
-$raw = 'http://jbbs.shitaraba.net/bbs/rawmode.cgi/otaku/12973/1396956877'; // STORAGE IN
+$comments = $bbs->comments();
+var_dump($comments);
