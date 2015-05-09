@@ -101,14 +101,22 @@ class ShitarabaProvider extends AbstractProvider
      */
     public function parseHtml($body)
     {
-        var_dump($body);
-        exit();
-        $crawler = (new Crawler())->addHtmlContent($body, 'UTF-8');
+        $crawler = new Crawler();
+        $crawler->addHtmlContent($body);
         $result  = $crawler->filter('dt')->each(function(Crawler $node)
         {
             list($no, $name, $other) = explode('：', $node->text());
-
-            return compact('no', 'name', 'other');
+            $no = trim($no);
+            if (count($node->filter('a[href*=mailto]'))) {
+                $href         = $node->filter('a[href*=mailto]')->attr('href');
+                $email = substr($href, strpos($href, ':') + 1);
+            } else {
+                $email = '';
+            }
+            $date  = trim(substr($other, 0, strpos($other, 'ID')));
+            $text  = $node->nextAll()->first()->html();
+            $id    = substr($other, strpos($other, 'ID') + 3);
+            return compact('no', 'name', 'email', 'date', 'text', 'id');
         });
         return $result;
     }
