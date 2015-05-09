@@ -60,16 +60,6 @@ abstract class AbstractProvider
     }
 
     /**
-     * Get a fresh instance of the Guzzle HTTP client.
-     *
-     * @return GuzzleHttp\Client
-     */
-    public function client()
-    {
-        return new \GuzzleHttp\Client();
-    }
-
-    /**
      * url のセグメントを取得
      *
      * @param  int  $index
@@ -110,27 +100,6 @@ abstract class AbstractProvider
     }
 
     /**
-     * リクエストを送信する
-     *
-     * @param  string $method
-     * @param  string $url
-     * @param  array  $options
-     * @return \GuzzleHttp\Message\ResponseInterface
-     * @throws \Exception
-     */
-    public function request($method = 'GET', $url = null, $options = [])
-    {
-        $client   = $this->client();
-        $request  = $client->createRequest($method, $url, $options);
-        $response = $client->send($request);
-        if ($response->getStatusCode() > 400) {
-            // TODO Exception 作成
-            throw new \Exception($response->getBody()->getContents(), $response->getStatusCode());
-        }
-        return $response;
-    }
-
-    /**
      * スレッドの一覧を取得する
      *
      * @return array スレッド一覧
@@ -157,8 +126,17 @@ abstract class AbstractProvider
     /**
      * DAT をパースする
      *
-     * @param  string $body HTML
+     * @param  string $body dat
      * @return array 解析結果
      */
     abstract function parseDat($body);
+
+    /**
+     * 書き込みする
+     *
+     * @param  string $name
+     * @param  string $email
+     * @param  string $text
+     */
+    abstract function post($name = '', $email = 'sage', $text = null);
 }

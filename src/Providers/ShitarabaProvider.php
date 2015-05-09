@@ -49,7 +49,7 @@ class ShitarabaProvider extends AbstractProvider
     public function threads()
     {
         $url      = "{$this->baseUrl}/{$this->category()}/{$this->boardNo()}/subject.txt";
-        $response = $this->client()->get($url);
+        $response = $this->client->get($url);
         if ($response->getStatusCode() !== 200) {
             // TODO Exception 作成
             throw new \Exception($response->getBody()->getContents(), $response->getStatusCode());
@@ -71,12 +71,12 @@ class ShitarabaProvider extends AbstractProvider
     public function comments($start = null, $end = null)
     {
         $url      = "{$this->baseUrl}/bbs/rawmode.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}/";
-        $response = $this->request('GET', $url);
+        $response = $this->client->get($url);
         $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'EUC-JP');
         // 過去ログなら
         if ($response->getHeader('ERROR') === 'STORAGE IN') {
             $storageUrl = "{$this->baseUrl}/bbs/read_archive.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}/";
-            $storageRes = $this->request('GET', $storageUrl);
+            $storageRes = $this->client->get($storageUrl);
             $html       = $this->encode($storageRes->getBody()->getContents(), 'UTF-8', 'EUC-JP');
             return $this->parseHtml($html);
         }
@@ -108,17 +108,43 @@ class ShitarabaProvider extends AbstractProvider
             list($no, $name, $other) = explode('：', $node->text());
             $no = trim($no);
             if (count($node->filter('a[href*=mailto]'))) {
-                $href         = $node->filter('a[href*=mailto]')->attr('href');
+                $href  = $node->filter('a[href*=mailto]')->attr('href');
                 $email = substr($href, strpos($href, ':') + 1);
             } else {
                 $email = '';
             }
-            $date  = trim(substr($other, 0, strpos($other, 'ID')));
-            $text  = $node->nextAll()->first()->html();
-            $id    = substr($other, strpos($other, 'ID') + 3);
+            $date = trim(substr($other, 0, strpos($other, 'ID')));
+            $text = $node->nextAll()->first()->html();
+            $id   = substr($other, strpos($other, 'ID') + 3);
             return compact('no', 'name', 'email', 'date', 'text', 'id');
         });
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function post($name = '', $email = 'sage', $text = null)
+    {
+        if (is_nan($text)) {
+            throw new \InvalidArgumentException('text is null.');
+        }
+        mb_convert_variables('EUC-JP', 'UTF-8', $name, $email, $text);
+        $params = [
+            'DIR'     => $this->category(),
+            'BBS'     => $this->boardNo(),
+            'NAME'    => $name,
+            'MAIL'    => $email,
+            'MESSAGE' => $text,
+            'KEY'     => $this->threadNo(),
+            'submit'  => $this->encode('書き込む', 'UTF-8', 'EUC-JP')
+        ];
+        $header = [
+            'Referer'        => $this->url,
+            'Connection'     => 'close',
+            'Content-Length' => strlen(implode('&', $params))
+        ];
+
     }
 
     /**
