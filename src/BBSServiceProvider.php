@@ -27,6 +27,7 @@
 namespace Localdisk\BBS;
 
 use Illuminate\Support\ServiceProvider;
+use GuzzleHttp\Client;
 
 /**
  * BBSServiceProvider
@@ -52,7 +53,7 @@ class BBSServiceProvider extends ServiceProvider
     {
         $this->app->bindShared('bbs', function ($app)
         {
-            return new BBSManager($app);
+            return new BBSManager($app, new Client(['defaults' => ['headers' => ['User-Agent' => 'yarana.io']]]));
         });
     }
 

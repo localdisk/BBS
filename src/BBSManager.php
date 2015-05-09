@@ -37,6 +37,23 @@ class BBSManager extends Manager
 {
 
     /**
+     * Guzzle Client
+     *
+     * @var \GuzzleHttp\Client
+     */
+    protected $client;
+
+    /**
+     * コンストラクタ
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
+    public function __construct($app, $client)
+    {
+        $this->app    = $app;
+        $this->client = $client;
+    }
+    /**
      * Get a provider instance.
      *
      * @param  string $url
@@ -45,40 +62,43 @@ class BBSManager extends Manager
     public function url($url)
     {
         if (parse_url($url, PHP_URL_HOST) === 'jbbs.shitaraba.net') {
-            return $this->createShitarabaProvider();
+            return $this->createShitarabaProvider($url);
         }
-        return $this->createTwoChanProvider();
+        return $this->createTwoChanProvider($url);
     }
 
     /**
      * Create Shitaraba Provider
      *
+     * @param  string $url
      * @return Providers\AbstractProvider
      */
-    public function createShitarabaProvider()
+    public function createShitarabaProvider($url)
     {
-        return $this->buildProvider(Providers\ShitarabaProvider::class);
+        return $this->buildProvider(Providers\ShitarabaProvider::class, $url);
     }
 
     /**
      * Create TwoChan Provider
      *
+     * @param  string $url
      * @return Providers\AbstractProvider
      */
-    public function createTwoChanProvider()
+    public function createTwoChanProvider($url)
     {
-        return $this->buildProvider(Providers\TwoChanProvider::class);
+        return $this->buildProvider(Providers\TwoChanProvider::class, $url);
     }
 
     /**
      * Build Provider
      *
      * @param  string $provider
+     * @param  string $url
      * @return Providers\AbstractProvider
      */
-    public function buildProvider($provider)
+    public function buildProvider($provider, $url)
     {
-        return new $provider;
+        return new $provider($this->client, $url);
     }
 
     /**

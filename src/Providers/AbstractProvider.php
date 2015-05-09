@@ -33,22 +33,30 @@ namespace Localdisk\BBS\Providers;
  */
 abstract class AbstractProvider
 {
+    /**
+     * Guzzle Client
+     *
+     * @var \GuzzleHttp\Client
+     */
+    protected $client;
 
     /**
      * URL
      *
-     * @var string url
+     * @var string
      */
-    private $url;
+    protected $url;
 
     /**
      * コンストラクタ
      *
-     * @param string $url URL
+     * @param \GuzzleHttp\Client $client
+     * @param string $url
      */
-    public function __construct($url)
+    public function __construct($client, $url)
     {
-        $this->url = $url;
+        $this->client = $client;
+        $this->url    = $url;
     }
 
     /**
@@ -58,7 +66,7 @@ abstract class AbstractProvider
      */
     public function client()
     {
-        return new \GuzzleHttp\Client(['defaults' => ['headers' => ['User-Agent' => 'yarana.io']]]);
+        return new \GuzzleHttp\Client();
     }
 
     /**
@@ -103,7 +111,7 @@ abstract class AbstractProvider
 
     /**
      * リクエストを送信する
-     * 
+     *
      * @param  string $method
      * @param  string $url
      * @param  array  $options
