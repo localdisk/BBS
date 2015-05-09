@@ -27,11 +27,88 @@
 namespace Localdisk\BBS\Providers;
 
 /**
- * Description of TwoChanProvider
+ * TwoChanProvider
  *
  * @author localdisk
  */
 class TwoChanProvider extends AbstractProvider
 {
-    //put your code here
+    /**
+     * {@inheritdoc}
+     */
+    public function comments($start = null, $end = null)
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function parseDat($body)
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function parseHtml($body)
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function post($name = '', $email = 'sage', $text = null)
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function threads()
+    {
+        $host     = parse_url($this->url, PHP_URL_HOST);
+        $url      = "http://{$host}/{$this->boardNo()}/subject.txt";
+        $response = $this->client->get($url);
+        if ($response->getStatusCode() >= 400) {
+            throw new \Exception('書き込みに失敗しました');
+        }
+        $body    = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+        $threads = array_filter(explode("\n", $body), 'strlen');
+
+        return array_map(function($elem)
+        {
+            list($id, $tmp) = explode('.dat<>', $elem);
+            preg_match('/^(.*)\(([0-9]+)\)\z/', $tmp, $matches);
+            return ['id' => $id, 'title' => trim($matches[1]), 'count' => $matches[2]];
+        }, $threads);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function category()
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function boardNo()
+    {
+        return $this->segment(3);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function threadNo()
+    {
+        return $this->segment(4);
+    }
+
 }

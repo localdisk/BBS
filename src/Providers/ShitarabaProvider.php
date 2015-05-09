@@ -50,9 +50,8 @@ class ShitarabaProvider extends AbstractProvider
     {
         $url      = "{$this->baseUrl}/{$this->category()}/{$this->boardNo()}/subject.txt";
         $response = $this->client->get($url);
-        if ($response->getStatusCode() !== 200) {
-            // TODO Exception 作成
-            throw new \Exception($response->getBody()->getContents(), $response->getStatusCode());
+        if ($response->getStatusCode() >= 400) {
+            throw new \Exception('書き込みに失敗しました');
         }
         $body    = $this->encode($response->getBody()->getContents(), 'UTF-8', 'EUC-JP');
         $threads = array_filter(explode("\n", $body), 'strlen');
@@ -154,9 +153,7 @@ class ShitarabaProvider extends AbstractProvider
     }
 
     /**
-     * URL からカテゴリを取得する
-     *
-     * @return string カテゴリ
+     * {@inheritdoc}
      */
     public function category()
     {
@@ -164,9 +161,7 @@ class ShitarabaProvider extends AbstractProvider
     }
 
     /**
-     * URL から掲示板番号を取得する
-     *
-     * @return integer
+     * {@inheritdoc}
      */
     public function boardNo()
     {
@@ -174,9 +169,7 @@ class ShitarabaProvider extends AbstractProvider
     }
 
     /**
-     * URL からスレッド番号を取得する
-     *
-     * @return integer
+     * {@inheritdoc}
      */
     public function threadNo()
     {

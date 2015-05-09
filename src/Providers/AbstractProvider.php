@@ -139,4 +139,25 @@ abstract class AbstractProvider
      * @param  string $text
      */
     abstract function post($name = '', $email = 'sage', $text = null);
+
+    /**
+     * URL からカテゴリを取得する
+     *
+     * @return string カテゴリ
+     */
+    abstract function category();
+
+    /**
+     * URL から掲示板番号を取得する
+     *
+     * @return integer
+     */
+    abstract function boardNo();
+
+    /**
+     * URL からスレッド番号を取得する
+     *
+     * @return integer
+     */
+    abstract function threadNo();
 }
