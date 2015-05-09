@@ -126,11 +126,11 @@ class ShitarabaProvider extends AbstractProvider
      */
     public function post($name = '', $email = 'sage', $text = null)
     {
-        if (is_nan($text)) {
+        if (is_null($text)) {
             throw new \InvalidArgumentException('text is null.');
         }
         mb_convert_variables('EUC-JP', 'UTF-8', $name, $email, $text);
-        $params = [
+        $params   = [
             'DIR'     => $this->category(),
             'BBS'     => $this->boardNo(),
             'NAME'    => $name,
@@ -139,12 +139,18 @@ class ShitarabaProvider extends AbstractProvider
             'KEY'     => $this->threadNo(),
             'submit'  => $this->encode('書き込む', 'UTF-8', 'EUC-JP')
         ];
-        $header = [
+        $headers  = [
             'Referer'        => $this->url,
             'Connection'     => 'close',
             'Content-Length' => strlen(implode('&', $params))
         ];
-
+        $response = $this->client->post("{$this->baseUrl}/bbs/write.cgi", [
+            'headers' => $headers,
+            'body'    => $params,
+        ]);
+        if ($response->getStatusCode() >= 400) {
+            throw new \Exception('書き込みに失敗しました');
+        }
     }
 
     /**
