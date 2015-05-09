@@ -73,12 +73,12 @@ class BBSManager extends Manager
     /**
      * Build Provider
      *
-     * @param  string $driver
+     * @param  string $provider
      * @return Providers\AbstractProvider
      */
-    public function buildProvider($driver)
+    public function buildProvider($provider)
     {
-        return new $driver;
+        return new $provider;
     }
 
     /**
