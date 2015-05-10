@@ -38,7 +38,19 @@ class TwoChanProvider extends AbstractProvider
      */
     public function comments($start = null, $end = null)
     {
-
+        $host     = parse_url($this->url, PHP_URL_HOST);
+        $url      = "http://{$host}/{$this->boardNo()}/dat/{$this->threadNo()}.dat";
+        $response = $this->client->get($url, ['exceptions' => false]);
+        $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+        // 過去ログなら
+        if ($response->getStatusCode() >= 300 || $response->getStatusCode() < 500) {
+            $four = substr($this->threadNo(), 0, 4);
+            $five = substr($this->threadNo(), 0, 5);
+            $storageUrl = "http://{$host}/{$this->boardNo()}/kako/{$four}/{$five}/{$this->threadNo()}.dat";
+            $response = $this->client->get($storageUrl);
+            $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+        }
+        return $this->parseDat($body);
     }
 
     /**
@@ -46,6 +58,16 @@ class TwoChanProvider extends AbstractProvider
      */
     public function parseDat($body)
     {
+        $lines = array_filter(explode("\n", $body), 'strlen');
+        $no = 0;
+        return array_map(function($line) use (&$no)
+        {
+            $no++;
+            list($name, $mail, $date, $text) = explode('<>', $line);
+            $id   = mb_substr($date, strpos($date, ' ID:') + 2);
+            $date = mb_substr($date, 0, strpos($date, ' ID:') - 2);
+            return compact('no', 'name', 'mail', 'date', 'text', 'id');
+        }, $lines);
 
     }
 
@@ -54,7 +76,7 @@ class TwoChanProvider extends AbstractProvider
      */
     public function parseHtml($body)
     {
-
+        return '';
     }
 
     /**
