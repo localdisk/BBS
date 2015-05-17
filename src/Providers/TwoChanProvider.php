@@ -33,6 +33,7 @@ namespace Localdisk\BBS\Providers;
  */
 class TwoChanProvider extends AbstractProvider
 {
+
     /**
      * {@inheritdoc}
      */
@@ -43,12 +44,12 @@ class TwoChanProvider extends AbstractProvider
         $response = $this->client->get($url, ['exceptions' => false]);
         $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
         // 過去ログなら
-        if ($response->getStatusCode() >= 300 || $response->getStatusCode() < 500) {
-            $four = substr($this->threadNo(), 0, 4);
-            $five = substr($this->threadNo(), 0, 5);
+        if ($response->getStatusCode() >= 300 && $response->getStatusCode() < 500) {
+            $four       = substr($this->threadNo(), 0, 4);
+            $five       = substr($this->threadNo(), 0, 5);
             $storageUrl = "http://{$host}/{$this->boardNo()}/kako/{$four}/{$five}/{$this->threadNo()}.dat";
-            $response = $this->client->get($storageUrl);
-            $body     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+            $response   = $this->client->get($storageUrl);
+            $body       = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
         }
         return $this->parseDat($body);
     }
@@ -59,7 +60,7 @@ class TwoChanProvider extends AbstractProvider
     public function parseDat($body)
     {
         $lines = array_filter(explode("\n", $body), 'strlen');
-        $no = 0;
+        $no    = 0;
         return array_map(function($line) use (&$no)
         {
             $no++;
@@ -68,7 +69,6 @@ class TwoChanProvider extends AbstractProvider
             $date = mb_substr($date, 0, strpos($date, ' ID:') - 2);
             return compact('no', 'name', 'mail', 'date', 'text', 'id');
         }, $lines);
-
     }
 
     /**
@@ -82,9 +82,67 @@ class TwoChanProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function post($name = '', $email = 'sage', $text = null)
+    public function post($name = '', $email = 'sage', $text = '')
     {
+        mb_convert_variables('Shift_JIS', 'UTF-8', $name, $email, $text);
+        $host     = parse_url($this->url, PHP_URL_HOST);
+        $params   = [
+            'bbs'     => $this->boardNo(),
+            'key'     => $this->threadNo(),
+            'time'    => time(),
+            'FROM'    => $name,
+            'mail'    => $email,
+            'MESSAGE' => $text,
+            'submit'  => $this->encode('書き込む', 'Shift_JIS', 'UTF-8')
+        ];
+        $headers  = [
+            'Referer'        => $this->url,
+            'Connection'     => 'close',
+            'Content-Length' => strlen(implode('&', $params))
+        ];
+        $response = $this->client->post("http://{$host}/test/bbs.cgi", [
+            'headers' => $headers,
+            'body'    => $params,
+        ]);
+        $html = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+        if ($this->confirm($html)) {
+            // 再投稿
+            $headers['Cookie'] = $response->getHeader('Set-Cookie', true);
+            $reResponse          = $this->client->post("http://{$host}/test/bbs.cgi", [
+                'headers' => $headers,
+                'body'    => $this->recreateParams($html),
+            ]);
+        }
+    }
 
+    /**
+     * 書き込み確認かどうか
+     *
+     * @param  string $html
+     * @return boolean
+     */
+    private function confirm($html)
+    {
+        return strpos($html, '書き込み確認') !== false;
+    }
+
+    private function recreateParams($html)
+    {
+        $dom      = new \DOMDocument;
+        @$dom->loadHTML($html);
+        $inputs   = $dom->getElementsByTagName('input');
+
+        $params = [];
+        /* @var $input \DOMElement */
+        foreach ($inputs as $input) {
+            $value = $this->encode($input->getAttribute('value'), 'Shift_JIS', 'UTF-8');
+            if (strtolower($input->getAttribute('type')) === 'submit') {
+                $params['submit'] = $value;
+            } else {
+                $params[$input->getAttribute('name')] = $value;
+            }
+        }
+        return $params;
     }
 
     /**

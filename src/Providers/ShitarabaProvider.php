@@ -123,11 +123,8 @@ class ShitarabaProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function post($name = '', $email = 'sage', $text = null)
+    public function post($name = '', $email = 'sage', $text = '')
     {
-        if (is_null($text)) {
-            throw new \InvalidArgumentException('text is null.');
-        }
         mb_convert_variables('EUC-JP', 'UTF-8', $name, $email, $text);
         $params   = [
             'DIR'     => $this->category(),
@@ -136,7 +133,7 @@ class ShitarabaProvider extends AbstractProvider
             'MAIL'    => $email,
             'MESSAGE' => $text,
             'KEY'     => $this->threadNo(),
-            'submit'  => $this->encode('書き込む', 'UTF-8', 'EUC-JP')
+            'submit'  => $this->encode('書き込む', 'EUC-JP', 'UTF-8')
         ];
         $headers  = [
             'Referer'        => $this->url,

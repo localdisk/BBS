@@ -138,7 +138,7 @@ abstract class AbstractProvider
      * @param  string $email
      * @param  string $text
      */
-    abstract function post($name = '', $email = 'sage', $text = null);
+    abstract function post($name = '', $email = 'sage', $text = '');
 
     /**
      * URL からカテゴリを取得する
