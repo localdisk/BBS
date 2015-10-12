@@ -1,37 +1,13 @@
 <?php
 
-/*
- * The MIT License
- *
- * Copyright 2015 localdisk.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
-namespace Localdisk\BBS\Providers;
+namespace Localdisk\BBS\Drivers;
 
 /**
  * TwoChanProvider
  *
  * @author localdisk
  */
-class TwoChanProvider extends AbstractProvider
+class TwoChanDriver extends AbstractDriver
 {
 
     /**
@@ -51,6 +27,7 @@ class TwoChanProvider extends AbstractProvider
             $response   = $this->client->get($storageUrl);
             $body       = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
         }
+
         return $this->parseDat($body);
     }
 
@@ -61,12 +38,13 @@ class TwoChanProvider extends AbstractProvider
     {
         $lines = array_filter(explode("\n", $body), 'strlen');
         $no    = 0;
-        return array_map(function($line) use (&$no)
-        {
+
+        return array_map(function ($line) use (&$no) {
             $no++;
             list($name, $mail, $date, $text) = explode('<>', $line);
             $id   = mb_substr($date, strpos($date, ' ID:') + 2);
             $date = mb_substr($date, 0, strpos($date, ' ID:') - 2);
+
             return compact('no', 'name', 'mail', 'date', 'text', 'id');
         }, $lines);
     }
@@ -93,22 +71,22 @@ class TwoChanProvider extends AbstractProvider
             'FROM'    => $name,
             'mail'    => $email,
             'MESSAGE' => $text,
-            'submit'  => $this->encode('書き込む', 'Shift_JIS', 'UTF-8')
+            'submit'  => $this->encode('書き込む', 'Shift_JIS', 'UTF-8'),
         ];
         $headers  = [
             'Referer'        => $this->url,
             'Connection'     => 'close',
-            'Content-Length' => strlen(implode('&', $params))
+            'Content-Length' => strlen(implode('&', $params)),
         ];
         $response = $this->client->post("http://{$host}/test/bbs.cgi", [
             'headers' => $headers,
             'body'    => $params,
         ]);
-        $html = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
+        $html     = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
         if ($this->confirm($html)) {
             // 再投稿
-            $headers['Cookie'] = $response->getHeader('Set-Cookie', true);
-            $reResponse          = $this->client->post("http://{$host}/test/bbs.cgi", [
+            $headers['Cookie'] = $response->getHeader('Set-Cookie');
+            $this->client->post("http://{$host}/test/bbs.cgi", [
                 'headers' => $headers,
                 'body'    => $this->recreateParams($html),
             ]);
@@ -119,6 +97,7 @@ class TwoChanProvider extends AbstractProvider
      * 書き込み確認かどうか
      *
      * @param  string $html
+     *
      * @return boolean
      */
     private function confirm($html)
@@ -128,9 +107,9 @@ class TwoChanProvider extends AbstractProvider
 
     private function recreateParams($html)
     {
-        $dom      = new \DOMDocument;
+        $dom = new \DOMDocument;
         @$dom->loadHTML($html);
-        $inputs   = $dom->getElementsByTagName('input');
+        $inputs = $dom->getElementsByTagName('input');
 
         $params = [];
         /* @var $input \DOMElement */
@@ -142,6 +121,7 @@ class TwoChanProvider extends AbstractProvider
                 $params[$input->getAttribute('name')] = $value;
             }
         }
+
         return $params;
     }
 
@@ -159,10 +139,10 @@ class TwoChanProvider extends AbstractProvider
         $body    = $this->encode($response->getBody()->getContents(), 'UTF-8', 'Shift_JIS');
         $threads = array_filter(explode("\n", $body), 'strlen');
 
-        return array_map(function($elem)
-        {
+        return array_map(function ($elem) {
             list($id, $tmp) = explode('.dat<>', $elem);
             preg_match('/^(.*)\(([0-9]+)\)\z/', $tmp, $matches);
+
             return ['id' => $id, 'title' => trim($matches[1]), 'count' => $matches[2]];
         }, $threads);
     }

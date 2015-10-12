@@ -1,30 +1,7 @@
 <?php
 
-/*
- * The MIT License
- *
- * Copyright 2015 localdisk.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 
-namespace Localdisk\BBS\Providers;
+namespace Localdisk\BBS\Drivers;
 
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -33,7 +10,7 @@ use Symfony\Component\DomCrawler\Crawler;
  *
  * @author localdisk
  */
-class ShitarabaProvider extends AbstractProvider
+class ShitarabaDriver extends AbstractDriver
 {
 
     /**
@@ -56,10 +33,10 @@ class ShitarabaProvider extends AbstractProvider
         $body    = $this->encode($response->getBody()->getContents(), 'UTF-8', 'EUC-JP');
         $threads = array_filter(explode("\n", $body), 'strlen');
 
-        return array_map(function($elem)
-        {
+        return array_map(function ($elem) {
             list($id, $tmp) = explode('.cgi,', $elem);
             preg_match('/^(.*)\(([0-9]+)\)\z/', $tmp, $matches);
+
             return ['id' => $id, 'title' => trim($matches[1]), 'count' => $matches[2]];
         }, $threads);
     }
@@ -77,8 +54,10 @@ class ShitarabaProvider extends AbstractProvider
             $storageUrl = "{$this->baseUrl}/bbs/read_archive.cgi/{$this->category()}/{$this->boardNo()}/{$this->threadNo()}/";
             $storageRes = $this->client->get($storageUrl);
             $html       = $this->encode($storageRes->getBody()->getContents(), 'UTF-8', 'EUC-JP');
+
             return $this->parseHtml($html);
         }
+
         return $this->parseDat($body);
     }
 
@@ -88,9 +67,10 @@ class ShitarabaProvider extends AbstractProvider
     public function parseDat($body)
     {
         $lines = array_filter(explode("\n", $body), 'strlen');
-        return array_map(function($line)
-        {
-            list($no, $name, $mail, $date, $text,, $id) = explode('<>', $line);
+
+        return array_map(function ($line) {
+            list($no, $name, $mail, $date, $text, , $id) = explode('<>', $line);
+
             return compact('no', 'name', 'mail', 'date', 'text', 'id');
         }, $lines);
     }
@@ -102,8 +82,7 @@ class ShitarabaProvider extends AbstractProvider
     {
         $crawler = new Crawler();
         $crawler->addHtmlContent($body);
-        $result  = $crawler->filter('dt')->each(function(Crawler $node)
-        {
+        $result = $crawler->filter('dt')->each(function (Crawler $node) {
             list($no, $name, $other) = explode('：', $node->text());
             $no = trim($no);
             if (count($node->filter('a[href*=mailto]'))) {
@@ -115,8 +94,10 @@ class ShitarabaProvider extends AbstractProvider
             $date = trim(substr($other, 0, strpos($other, 'ID')));
             $text = $node->nextAll()->first()->html();
             $id   = substr($other, strpos($other, 'ID') + 3);
+
             return compact('no', 'name', 'email', 'date', 'text', 'id');
         });
+
         return $result;
     }
 
@@ -133,12 +114,12 @@ class ShitarabaProvider extends AbstractProvider
             'MAIL'    => $email,
             'MESSAGE' => $text,
             'KEY'     => $this->threadNo(),
-            'submit'  => $this->encode('書き込む', 'EUC-JP', 'UTF-8')
+            'submit'  => $this->encode('書き込む', 'EUC-JP', 'UTF-8'),
         ];
         $headers  = [
             'Referer'        => $this->url,
             'Connection'     => 'close',
-            'Content-Length' => strlen(implode('&', $params))
+            'Content-Length' => strlen(implode('&', $params)),
         ];
         $response = $this->client->post("{$this->baseUrl}/bbs/write.cgi", [
             'headers' => $headers,
