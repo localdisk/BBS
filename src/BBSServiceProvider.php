@@ -28,7 +28,7 @@ class BBSServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('bbs', function ($app) {
-            return new BBSManager($app, new Client(['defaults' => ['headers' => ['User-Agent' => 'yarana.io']]]));
+            return new BBSManager($app);
         });
     }
 

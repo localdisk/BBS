@@ -10,13 +10,6 @@ namespace Localdisk\BBS\Drivers;
 abstract class AbstractDriver
 {
     /**
-     * Guzzle Client
-     *
-     * @var \GuzzleHttp\Client
-     */
-    protected $client;
-
-    /**
      * URL
      *
      * @var string
@@ -24,22 +17,35 @@ abstract class AbstractDriver
     protected $url;
 
     /**
+     * Size
+     *
+     * @var int
+     */
+    protected $size = 0;
+
+    /**
+     * Modified
+     *
+     * @var string
+     */
+    protected $modified = '';
+
+    /**
      * コンストラクタ
      *
-     * @param \GuzzleHttp\Client $client
-     * @param string $url
+     * @param string             $url
      */
-    public function __construct($client, $url)
+    public function __construct($url)
     {
-        $this->client = $client;
         $this->url    = $url;
     }
 
     /**
      * url のセグメントを取得
      *
-     * @param  int  $index
-     * @param  mixed  $default
+     * @param  int   $index
+     * @param  mixed $default
+     *
      * @return string
      */
     public function segment($index, $default = null)
@@ -56,8 +62,7 @@ abstract class AbstractDriver
     {
         $segments = explode('/', parse_url($this->url, PHP_URL_PATH));
 
-        return array_values(array_filter($segments, function($v)
-        {
+        return array_values(array_filter($segments, function ($v) {
             return $v != '';
         }));
     }
@@ -68,11 +73,42 @@ abstract class AbstractDriver
      * @param  string $str
      * @param  string $to
      * @param  string $from
+     *
      * @return string
      */
     public function encode($str, $to, $from)
     {
         return mb_convert_encoding($str, $to, $from);
+    }
+
+    /**
+     * サイズを取得する
+     *
+     * @return int
+     */
+    public function getSize()
+    {
+        return $this->size;
+    }
+
+    /**
+     * 最終更新日時を取得する
+     *
+     * @return string
+     */
+    public function getModified()
+    {
+        return $this->modified;
+    }
+
+    /**
+     * URL を取得する
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
     }
 
     /**
@@ -85,16 +121,19 @@ abstract class AbstractDriver
     /**
      * スレッドの内容を取得する
      *
-     * @param  integer $start 開始レス番
-     * @param  integer $end   終了レス番
+     * @param  integer $start   開始レス番
+     * @param  integer $end     終了レス番
+     * @param  array   $headers ヘッダ
+     *
      * @return array スレッドの内容
      */
-    abstract function comments($start = null, $end = null);
+    abstract function comments($start = null, $end = null, array $headers = []);
 
     /**
      * HTML をパースする
      *
      * @param  string $body HTML
+     *
      * @return array 解析結果
      */
     abstract function parseHtml($body);
@@ -103,6 +142,7 @@ abstract class AbstractDriver
      * DAT をパースする
      *
      * @param  string $body dat
+     *
      * @return array 解析結果
      */
     abstract function parseDat($body);

@@ -15,22 +15,13 @@ class BBSManager extends Manager
 {
 
     /**
-     * Guzzle Client
-     *
-     * @var \GuzzleHttp\Client
-     */
-    protected $client;
-
-    /**
      * コンストラクタ
      *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @param \GuzzleHttp\Client $client
+     * @param  \Illuminate\Contracts\Foundation\Application
      */
-    public function __construct($app, $client)
+    public function __construct($app)
     {
         parent::__construct($app);
-        $this->client = $client;
     }
 
     /**
