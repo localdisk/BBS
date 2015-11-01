@@ -74,7 +74,7 @@ class BBSManager extends Manager
      */
     public function buildProvider($provider, $url)
     {
-        return new $provider($this->client, $url);
+        return new $provider($url);
     }
 
     /**
