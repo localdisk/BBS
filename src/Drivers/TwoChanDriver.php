@@ -113,16 +113,14 @@ class TwoChanDriver extends AbstractDriver
             'submit'  => $this->encode('書き込む', 'Shift_JIS', 'UTF-8'),
         ];
         $headers  = [
-            'Referer'        => $this->url,
-            'Connection'     => 'close',
-            'Content-Length' => strlen(implode('&', $params)),
-            'User-Agent'     => 'Mozilla/1.00 (yarana.io)',
+            'Host'       => parse_url($this->url, PHP_URL_HOST),
+            'Referer'    => $this->url,
+            'useragent' => $this->userAgent,
         ];
         $response = \Requests::post("http://{$host}/test/bbs.cgi", $headers, $params);
         $html     = $this->encode($response->body, 'UTF-8', 'Shift_JIS');
         if ($this->confirm($html)) {
             // 再投稿
-            $headers['Cookie'] =
             $options = [
                 'cookies' => [$response->headers['set-cookie'],
                 ],

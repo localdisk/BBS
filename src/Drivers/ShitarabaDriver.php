@@ -81,22 +81,24 @@ class ShitarabaDriver extends AbstractDriver
             'MAIL'    => $email,
         ];
         $headers  = [
+            'Host'            => parse_url($this->url, PHP_URL_HOST),
             'Referer'         => $this->url,
-            'Content-Length'  => strlen(http_build_query($params, null, '&')),
             'Accept-Encoding' => 'gzip ,deflate',
         ];
         $options  = [
             'cookies'   => [
-                'NAME'  => '',
-                'EMAIL' => 'sage',
+                'NAME'  => $name,
+                'EMAIL' => $email,
                 'Path'  => '/',
             ],
-            'useragent' => 'Mozilla/1.00 (yarana.io)',
+            'useragent' => $this->userAgent,
         ];
         $response = \Requests::post("{$this->baseUrl}/bbs/write.cgi", $headers, $params, $options);
         if ($response->status_code >= 400) {
             throw new \Exception('書き込みに失敗しました');
         }
+
+        return $response;
     }
 
     /**

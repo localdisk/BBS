@@ -33,12 +33,19 @@ abstract class AbstractDriver
     /**
      * コンストラクタ
      *
-     * @param string             $url
+     * @param string $url
      */
     public function __construct($url)
     {
-        $this->url    = $url;
+        $this->url = $url;
     }
+
+    /**
+     * User-Agent
+     *
+     * @var string $userAgent
+     */
+    protected $userAgent = 'Mozilla/1.00 (yarana.io)';
 
     /**
      * url のセグメントを取得
