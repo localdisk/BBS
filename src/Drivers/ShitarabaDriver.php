@@ -113,7 +113,7 @@ class ShitarabaDriver extends AbstractDriver
 
         return array_map(function ($line) use ($url) {
             list($number, $name, $email, $date, $body, , $resid) = explode('<>', $line);
-
+            $name = strip_tags($name);
             return compact('number', 'name', 'email', 'date', 'body', 'resid', 'url');
         }, $lines);
     }
