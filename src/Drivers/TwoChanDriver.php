@@ -81,7 +81,7 @@ class TwoChanDriver extends AbstractDriver
             $number++;
             list($name, $email, $date, $body) = explode('<>', $line);
             $name  = strip_tags($name);
-            $body  = strip_tags($body);
+            $body  = strip_tags($body, '<br>');
             $resid = mb_substr($date, strpos($date, ' ID:') + 2);
             $date  = mb_substr($date, 0, strpos($date, ' ID:') - 2);
 

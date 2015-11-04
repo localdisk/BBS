@@ -114,7 +114,7 @@ class ShitarabaDriver extends AbstractDriver
         return array_map(function ($line) use ($url) {
             list($number, $name, $email, $date, $body, , $resid) = explode('<>', $line);
             $name = strip_tags($name);
-            $body = strip_tags($body);
+            $body = strip_tags($body, '<br>');
             return compact('number', 'name', 'email', 'date', 'body', 'resid', 'url');
         }, $lines);
     }
@@ -138,7 +138,7 @@ class ShitarabaDriver extends AbstractDriver
                 $email = '';
             }
             $date  = trim(substr($other, 0, strpos($other, 'ID')));
-            $body  = strip_tags($node->nextAll()->first()->html());
+            $body  = strip_tags($node->nextAll()->first()->html(), '<br>');
             $resid = substr($other, strpos($other, 'ID') + 3);
 
             return compact('number', 'name', 'email', 'date', 'body', 'resid', 'url');
