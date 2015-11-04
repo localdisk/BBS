@@ -114,6 +114,7 @@ class ShitarabaDriver extends AbstractDriver
         return array_map(function ($line) use ($url) {
             list($number, $name, $email, $date, $body, , $resid) = explode('<>', $line);
             $name = strip_tags($name);
+            $body = strip_tags($body);
             return compact('number', 'name', 'email', 'date', 'body', 'resid', 'url');
         }, $lines);
     }
@@ -128,6 +129,7 @@ class ShitarabaDriver extends AbstractDriver
         $url    = $this->url;
         $result = $crawler->filter('dt')->each(function (Crawler $node) use ($url) {
             list($number, $name, $other) = explode('：', $node->text());
+            $name   = strip_tags($name);
             $number = trim($number);
             if (count($node->filter('a[href*=mailto]'))) {
                 $href  = $node->filter('a[href*=mailto]')->attr('href');
@@ -136,7 +138,7 @@ class ShitarabaDriver extends AbstractDriver
                 $email = '';
             }
             $date  = trim(substr($other, 0, strpos($other, 'ID')));
-            $body  = $node->nextAll()->first()->html();
+            $body  = strip_tags($node->nextAll()->first()->html());
             $resid = substr($other, strpos($other, 'ID') + 3);
 
             return compact('number', 'name', 'email', 'date', 'body', 'resid', 'url');
