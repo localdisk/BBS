@@ -50,7 +50,9 @@ class ShitarabaDriver extends AbstractDriver
     public function comments($start = null, $end = null, array $headers = [])
     {
         $url      = $this->createCommentsUrl($start, $end);
-        $response = \Requests::get($url);
+        $response = \Requests::get($url, [], [
+            'timeout' => 10,
+        ]);
         $body     = $this->encode($response->body, 'UTF-8', 'EUC-JP');
         // 過去ログなら
         if ($response->headers['error'] === 'STORAGE IN') {
