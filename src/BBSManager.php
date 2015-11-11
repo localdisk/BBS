@@ -2,6 +2,7 @@
 
 namespace Localdisk\BBS;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Manager;
 use Localdisk\BBS\Drivers\ShitarabaDriver;
 use Localdisk\BBS\Drivers\TwoChanDriver;
@@ -19,7 +20,7 @@ class BBSManager extends Manager
      *
      * @param  \Illuminate\Contracts\Foundation\Application
      */
-    public function __construct($app)
+    public function __construct(Application $app)
     {
         parent::__construct($app);
     }
