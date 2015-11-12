@@ -45,7 +45,7 @@ class TwoChanDriver extends AbstractDriver
         $host     = parse_url($this->url, PHP_URL_HOST);
         $url      = "http://{$host}/{$this->boardNo()}/dat/{$this->threadNo()}.dat";
         $response = \Requests::get($url, $headers, [
-            'timeout' => 30,
+            'timeout' => 120,
         ]);
         $body     = null;
         // 304 なら更新なし

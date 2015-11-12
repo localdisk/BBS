@@ -51,7 +51,7 @@ class ShitarabaDriver extends AbstractDriver
     {
         $url      = $this->createCommentsUrl($start, $end);
         $response = \Requests::get($url, [], [
-            'timeout' => 30,
+            'timeout' => 120,
         ]);
         $body     = $this->encode($response->body, 'UTF-8', 'EUC-JP');
         // 過去ログなら
